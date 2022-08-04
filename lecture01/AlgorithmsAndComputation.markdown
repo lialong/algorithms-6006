@@ -50,7 +50,7 @@ base case：k=0，前k个不包含匹配
 
 | input | constant    | logarithmic    | linear      | log-linear      | quadratic     | polynomial    | exponential               |
 |:----- | ----------- | -------------- | ----------- | --------------- | ------------- | ------------- | ------------------------- |
-| n     | $\Theta(1)$ | $\theta(logn)$ | $\Theta(n)$ | $\Theta(nlogn)$ | $\Theta(n^2)$ | $\Theta(n^c)$ | $2^{\theta(n^c)}$         |
+| n     | $\Theta(1)$ | $\Theta(logn)$ | $\Theta(n)$ | $\Theta(nlogn)$ | $\Theta(n^2)$ | $\Theta(n^c)$ | $2^{\Theta(n^c)}$         |
 | 1000  | 1           | $\approx10$    | 1000        | $\approx10,000$ | 1,000,000     | $1000^c$      | $2^{1000}\approx10^{301}$ |
 | Time  | 1ns         | 10ns           | 1us         | 10us            | 1ms           | $10^{3c-9}$s  | $10^{281}$millenia        |
 
@@ -114,16 +114,26 @@ StaticArray.set_at(i, x)：把word x写到数组索引i处，用时Θ(1)
 ## 渐进性理念（asymptotic notation）
 
 &emsp;&emsp;我们可以使用渐进性理念来忽略常量（不会随问题输入的尺寸改变）。O(f(n))代表函数（在自然数域满足以下属性）集合。
-&emsp;&emsp;O理念：非负函数g(n)是O(f(n))，存在正实数c，和正整数n0，对于所有n>=n0，满足g(n)<=cf(n)。
-&emsp;&emsp;此定义为足够大的n的函数的渐近增长上界。即使，我们以恒定数量放缩或移动我们的函数，增长的界限也是对的。按照惯例，对人们来说，称函数g(n)是O(f(n))或等于O(f(n))是更常见的，但它们真正的含义是子集，g(n)\inO(f(n))。因此，由于我们的问题大小是cn，我们可以忽略c，并将输入大小称为O(n)。一个相似的理念可被用作下边界。
-&emsp;&emsp;$\Omega$理念：非负函数g(n)是$\Omega(f(n))$，存在正实数c和正整数n0，对于n>=n0，让cf(n)<=g(n)。
-&emsp;&emsp;当一个函数既上边界渐进、又下边界渐进另外一个函数，我们使用$\Theta$理念。当g(n)=$\ \Theta(f(n))$，我们称f(n)代表g(n)的严格上下限。
 
-- $\Theta$理念：如果$g(n)\ \in$ $O(f(n))\cap$ $\Omega(f(n))$，非负函数g(n)是$\Theta(f(n))$。
+        O理念：非负函数g(n)是O(f(n))，存在正实数c，和正整数n0，对于所有n>=n0，满足g(n)<=cf(n)。
+
+        此定义为足够大的n的函数的渐近增长上界。即使，我们以恒定数量放缩或移动我们的函数，增长的界限也是对的。按照惯例，对人们来说，称函数g(n)是O(f(n))或等于O(f(n))是更常见的，但它们真正的含义是子集，g(n)\inO(f(n))。因此，由于我们的问题大小是cn，我们可以忽略c，并将输入大小称为O(n)。一个相似的理念可被用作下边界。
+
+        $\Omega$理念：非负函数g(n)是$\Omega(f(n))$，存在正实数c和正整数n0，对于n>=n0，让cf(n)<=g(n)。
+
+        当一个函数既上边界渐进、又下边界渐进另外一个函数，我们使用$\Theta$理念。当g(n)=$\ \Theta(f(n))$，我们称f(n)代表g(n)的严格上下限。
+
+        $\Theta$理念：如果$g(n)\ \in$ $O(f(n))\cap$ $\Omega(f(n))$，非负函数g(n)是$\Theta(f(n))$。
 
         我们通常使用缩写来描述常见函数的渐进增长（例如：渐进复杂度），例如那些展示在下表中的。这里我们假设$c\in\Theta(1)$。
- $\Theta(1)$：constant；$\Theta(logn)$：logarithmic；$\Theta(n)$：linear； $\Theta(n^2)$：quadratic；$\Theta(n^c)$：polynomial；$2^{\Theta(n^c)}$：exponential。
-  对解决问题来说，线性时间通常是必要的，为了解决问题，整个输入必须被读入。然而，如果输入已经可从内存访问，一些问题能以sub-linear时间被解决。例如，在有序数组（已经加载进内存）中找一个值的问题，可以通过二分查找，以对数时间解决。本课中，我们聚焦于polynomial。在logarithmic、linear和exponential之间有很大不同。如果n=1000，$logn\approx10$，n$\approx10^3$，然而$2^n\approx10^{300}$。为了比较，宇宙中原子的数量大约$10^{80}$。通常用变量n来代表参数（在问题输入尺寸中是线性的），尽管并非总是这种情况。例如，之后讨论的图算法，问题的输入将是一个图参数：点集合V和线集合E，因此自然数输入尺寸是：$\Theta(|V|+|E|)$。或者，当讨论矩阵算法时，通常n表示方阵的宽度，问题输入有尺寸$\Theta(n^2)$，表明n*n矩阵的每个元素。
+
+| shorthand      | Constant    | Logarithmic    | Linear      | Quadratic     | Polynomial    | Exponentia        |
+| -------------- | ----------- | -------------- | ----------- | ------------- | ------------- | ----------------- |
+| $\Theta(f(n))$ | $\Theta(1)$ | $\Theta(logn)$ | $\Theta(n)$ | $\Theta(n^c)$ | $\Theta(n^c)$ | $2^{\Theta(n^c)}$ |
+
+  对解决问题来说，线性时间通常是必要的，为了解决问题，整个输入必须被读入。然而，如果输入已经可从内存访问，一些问题能以sub-linear时间被解决。例如，在有序数组（已经加载进内存）中找一个值的问题，可以通过二分查找，以对数时间解决。本课中，我们聚焦于polynomial。在logarithmic、linear和exponential之间有很大不同。
+
+        如果n=1000，$logn\approx10$，n$\approx10^3$，然而$2^n\approx10^{300}$。为了比较，宇宙中原子的数量大约$10^{80}$。通常用变量n来代表参数（在问题输入尺寸中是线性的），尽管并非总是这种情况。例如，之后讨论的图算法，问题的输入将是一个图参数：点集合V和线集合E，因此自然数输入尺寸是：$\Theta(|V|+|E|)$。或者，当讨论矩阵算法时，通常n表示方阵的宽度，问题输入有尺寸$\Theta(n^2)$，表明n*n矩阵的每个元素。
 
 ## 计算模型（computation）
 
@@ -147,7 +157,45 @@ $O(n)+\sum_{k=0}^{n-1}(O(1)+k*O(1))=O(n^2)$
 
 ## 渐进性练习（asymptotics Exercises）
 
+1、$\binom {n}{6006}$
+
+分子：$n(n-1)...(n-6005)$，n的6006次方的多项式
+
+分母：$6006!$，对于n来说是个常数
+
+因此：$\binom {n}{6006}=\Theta(n^{6006})$
+
+2、$log_{6006}{((log(n^{\sqrt{n}}))^2)}$
+
+公式：$logab=loga+logb$，$log(a^b)=bloga$，$log_ab=logb/loga$
+
+$log_{6006}{((log(n^{\sqrt{n}}))^2)}=\dfrac{2}{log6006}log(\sqrt{n}logn)=\Theta(logn^{1/2}+loglogn)=\Theta(logn)$
+
+3、$2^{n+1}\in\Theta(2^n)，2^{2^{n+1}}\notin\mathcal{O}(2^{2n})$
+
+$2^{n+1}=2*2^n$，常量乘$2^n$还是$2^n$
+
+$2^{2^{n+1}}=(2^{2n})^2$，$2^{2n}$并非一个常量
+
+4、对于所有正数a、b，$(logn)^a=\mathcal{O}(n^b)$
+
+$\lim\limits_{n \to \infty}log(\dfrac{n^b}{(logn)^a})=\lim\limits_{n \to \infty}(blogn-aloglogn)=\lim\limits_{x \to \infty}(bx-alogx)=\infty$
+
+5、$(logn)^{logn}=\Omega(n)$
+
+因为：$m^m=\Omega(2^m)$，令$n=2^m$，所以m=logn，得以证明
+
+6、$(6n)!\notin\Theta(n!)$，但$log((6n)!)\in\Theta(log(n!))$
+
+Sterling’s近似法：
+
+$n!=\sqrt{2\pi n}(\dfrac{n}{e})^n(1+\Theta(\dfrac{1}{n}))$
+
 # 八、problem session1
+
+## 1-1函数的渐进性
+
+对于下面5个函数集合中每一个，对它们进行排序，以便于如果在序列中，$f_a$出现在$f_b$之前，那么$f_a=\mathcal{O}(f_b)$
 
 算法时间复杂度：$n、logn、n2、2n、nlogn$
 $(logn)k=O(n)$，O 表示lim logn/n，n->正无穷时，值为0
