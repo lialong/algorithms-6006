@@ -195,10 +195,57 @@ $n!=\sqrt{2\pi n}(\dfrac{n}{e})^n(1+\Theta(\dfrac{1}{n}))$
 
 ## 1-1函数的渐进性
 
-对于下面5个函数集合中每一个，对它们进行排序，以便于如果在序列中，$f_a$出现在$f_b$之前，那么$f_a=\mathcal{O}(f_b)$
+对于下面5个函数集合中每一个，对它们进行排序。如果在序列中，$f_a$出现在$f_b$之前，那么$f_a=\mathcal{O}(f_b)$。如果$f_a=\mathcal{O}(f_b)$且$f_b=\mathcal{O}(f_a)$，意味着$f_a$和$f_b$可以任何顺序出现，可以用花括号把$f_a和f_b$围起来表明这种情况。例如，如果多个函数为：
 
-算法时间复杂度：$n、logn、n2、2n、nlogn$
-$(logn)k=O(n)$，O 表示lim logn/n，n->正无穷时，值为0
+$f_1=n，f_2=\sqrt{n}，f_3=n+\sqrt{n}$
+
+正确的答案是：$(f_2,\{ f_1 , f_3 \} )或(f_2,\{ f_3 , f_1 \} )$
+
+a) $f_1=(logn)^{2019}，f_2=n^2log(n^{2019})，f_3=n^3，f_4=2.019^n，f_5=nlogn$
+
+$f_1,f_5,f_2,f_3,f_4$
+
+b) $f_1=2^n,f2=n^3,f_3=\binom{n}{n/2},f_4=n!,f_5=\binom{n}{3}$
+
+$\{f_2,f_5\},f_3,f_1,f_4$
+
+## 1-2队列基本操作
+
+ 给定一个数据结构D，支持4个 first/last 序列操作：
+
+D.insert_first(x)，D.delete_first()，D.insert_last(x)，D.delete_last()
+
+每个操作都是$\mathcal{O}(1)$，描述算法：用低级操作方法来实现下面高级操作。
+
+删除操作返回删除的元素。
+
+(a) swap_ends(D):以$\mathcal{O}(1)$复杂度交换序列中第一个和最后一个元素。
+
+first = D.delete_first()
+
+end = D.delete_last()
+
+D.insert_first(end)
+
+D.insert_last(first)
+
+(b)shift_left(D,k):以$\mathcal{O}(k)$复杂度把前k个元素按顺序移动到序列末尾，移动完后，之前序列中的第k个元素成为末尾，之前序列中的第k+1个元素成为序列之首。
+
+for(int i=0; i < k; i++) {
+
+    tmp = D.delete_first();
+
+    D.insert_last(tmp)
+
+}
+
+## 1-3双端队列操作
+
+动态数组可以实现一个序列接口，支持最坏情形$\mathcal{O}(1)$时间索引（根据角标i找到对应元素），以及从数组后面插入、删除item是可变常量时间（插入n个item，时间为$\mathcal{O}(n)）$。然而在动态数组前面插入和删除，并非足够有效的，因为每个entry必须移动来保持序列所有entry的有序性，花费线性时间。
+
+另一方面，链表数据结构，在两端都可以最坏情形$\mathcal{O}(1)$支持插入、删除操作，但代价是线性时间查找。
+
+我们可以两个好处都占：设计一个数据结构来存储一系列的item，支持最坏情形$\mathcal{O}(1)$时间索引查找，以及可摊还$\mathcal{O}(1)$时间在两端插入和删除。你的数据结构应该使用$\mathcal{O}(n)$空间来存储n个item。
 
 # 九、problem set0
 
