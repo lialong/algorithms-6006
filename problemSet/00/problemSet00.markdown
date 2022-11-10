@@ -20,7 +20,7 @@ B={3，6，12，15}
 
 ## (c)$|A-B|$
 
-|{1, 13, 9}|=2
+|{1, 13, 9}|=3
 
 # 0-2
 
@@ -117,5 +117,4 @@ def count_long_subarrays(A):
 if __name__ == "__main__":
     A = (1,3,4,2,7,5,6,9,8,9,10)
     print(count_long_subarrays(A))
-
 ```
