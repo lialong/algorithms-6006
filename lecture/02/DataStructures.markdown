@@ -525,3 +525,85 @@ class Dynamic_Array_Seq(Array_Seq):
     def insert_first(self, x): self.insert_at(0, x)
     def delete_first(self):    return self.delete_at(0)
 ```
+
+## 练习
+
+假设链表最后一个节点的next指针，指向list中前面的节点，形成一个环。给定一个指向list（不知道它的尺寸）首部的指针，描述一个线性算法，找出环中的节点个数。原始链表外仅用常量额外空间实现它。
+
+答案：始于两个指针指向链表头：一个慢指针、一个快指针。指针轮流遍历链表节点，开支真先开始。轮到慢指针，慢指针简单地移动到的链表的下个节点；轮到快指针时，快指针先移动到下个节点，在结束它的机会前，移动到下个节点的下个节点。每次快指针访问一个节点时，检查看：是否是慢指针指向的相同节点。如果它们是一样的，那么快指针必然已经绕着环转了一圈，为了遇到环上某节点v处的慢指针。现在为了找到环的长度，简单地让快指针继续遍历list，知道返回到v，记录沿途访问的节点数。
+
+为了得知：这个算法以线性时间执行，明显地最后一步遍历环至多花费线性时间，v是遍历环时访问两次的仅有节点。我们声明：慢指针每次移动一个节点。
+
+假设：在快指针指向相同节点前，慢指针经过某节点u（意味着u在环上）两次。
+
+慢指针从u到u遍历环花费的相同时间，快指针将遍历环两次，意味着两个指针，必定在慢指针离开u之前，存在于相同节点，与假设矛盾。
+
+---
+
+给定一个实现序列接口数据结构，表明如何使用它来实现集合接口（你的实现不需要高效）。
+
+```python
+def Set_from_Seq(seq):
+    class set_from_seq:
+        def __init__(self):    self.S = seq()
+        def __len__(self):    return len(self.S)
+        def __iter__(self):    yield from self.S
+
+        def build(self, A):
+            self.S.build(A)
+
+        def insert(self, x):
+            for i in range(len(self.S)):
+                if self.S.get_at(i).key == x.key:
+                    self.S.set_at(i, x)
+                    reurn
+            self.S.insert_last(x)
+
+        def delete(self, k):
+            for i in range(len(self, S)):
+                if self.S.get_at(i).key == k
+                    return self.S.delete_at(i)
+
+        def find(self, k):
+            for x in self:
+                if x.key == k:    return x
+            return None
+
+        def find_min(self):
+            out = None
+            for x in self:
+                if (out is None) or (x.key < out.key):
+                    out = x
+            return out
+
+        def find_max(self):
+            out = None
+            for x in self:
+                if (out is None) or (x.key > out.key):
+                    out = x
+            return out
+
+        def find_next(self, k):
+            out = None
+            for x in self:
+                if x.key > k
+                    if (out is None) or (x.key < out.key):
+                        out = x
+            return out
+
+        def find_prev(self, k):
+            out = None
+            for x in self:
+                if x.key < k
+                    if (out is None) or (x.key > out.key):
+                        out = x
+            return out
+
+        def iter_ord(self):
+            x = self.find_min()
+            while x:
+                yield x
+                x = self.find_next(x.key)
+
+        return set_from_seq
+```

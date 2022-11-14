@@ -292,4 +292,210 @@ $E\{X_i\}=E\{\sum\limits_jX_{ij}\}=\sum\limits_jE\{X_{ij}\}\\=1+\sum\limits_{j\n
 
 ## 直接访问数组
 
-电脑中的绝大多数操作，仅允许常量逻辑分叉，像代码中的if语句。然而，你电脑上允许非常量分叉因子的操作：以常量时间随机访问任意内存地址。
+电脑中的绝大多数操作，仅允许常量逻辑分叉，像代码中的if语句。然而，你电脑上允许非常量分叉因子的操作：以常量时间随机访问任意内存地址。这个特殊操作允许一个算法决策树用巨大的分叉因子（如同你电脑里的空间那么大）来分叉。为了利用这个操作，我们定义一个数据结构（称为直接访问数组），这是一个正常的静态数组，用每个数组索引位置来关联一个语义：特别地是，任何有key为k的项目x，将被存在数组索引k处。这个声明，仅当项目keys是整数时有意义。幸运的是，在计算机中，内存中的任何事物可以被关联到整数上，例如：它的值是一系列的位或是内存地址，所以从现在起，我们将仅考虑整数keys。
+
+现在假设我们想存储n个项目，每个关联一个唯一的整数key（范围是，0到u-1）。我们可以存储项目到一个长度为u的直接访问数组，如果数组槽i存在项目的话，那它包含一个与整数i相关联的项目。为了找到key为整数i的项目，一个查询算法可以简单地查看数组插槽i，来以最坏常量时间对查询做出响应。然而，这个数据结构上的顺序操作将会非常慢：我们不能在直接访问数组，保证哪里是首部、尾部、或next元素，因此我们不得不花费u时间来做排序操作。
+
+最坏情形：基于存储空间消耗常量时间查找：对范围内所有可能的key，直接访问数组必须有一个对应的槽。当u比要存储的项目数量大很多时，存储一个直接访问数组可能是浪费的，在现代机器上甚至是不可能的。举例，假定你想用直接访问数组，支持10字母名字的集合find(k)操作。可能名字的空间将会是$u\approx26^{10}\approx9.5\times10^{13}$；表示该长度的位数组将需要17.6TB存储空间。我们如何解决这个障碍？答案是哈希！
+
+```python
+class DirectAccessArray:
+    def __init__(self, u):    self.A = [None] * u
+    def find(self, k):    return self.A[k]
+    def insert(self, x):    self.A[x.key] = x
+    def delete(self, k):    self.A[x.key] = None
+    def find_next(self, k):
+        for i in range(k, len(self.A)):
+            if A[i] is not None:
+                return A[i]
+    def find_max(self):
+        for i in range(len(self.A) - 1, -1, -1):
+            if A[i] is not None:
+                return A[i]
+    def delete_max(self):
+        for i in range(len(self.A) - 1, -1, -1):            
+            x = A[i]
+            if x is not None:
+                A[i] = None
+                return x
+```
+
+## 哈希（hashing）
+
+当仅用线性$\mathcal{O}(n)$空间，且n<<u，能从直接访问数组中获得性能成效么？可能的答案是：存储项目到更小的动态直接访问数组，$m=\mathcal{O}(n)$个槽，而不是u，根据存储项目数量，像动态数组一样增长、收缩。为了做到这样，我们需要一个函数，它映射项目keys到直接访问数组的不同槽位，$h(k):\{0,...,u-1\} \rightarrow \{0,...,m-1\}$。我们称这个函数为哈希函数或哈希映射，更小的直接访问数组被称为哈希表，$h(k)$是整数key k的哈希值。如果哈希函数在你存储的n个keys上是单射的，不会有两个keys，映射到直接访问数组相同的索引，那么我们将能够支持最坏情形常量时间的查询，哈希表表现得如同更小作用域m的直接访问数组。
+
+不幸地，如果可能keys的空间大于数组索引的数量，列入m<u，那么根据抽屉理论（pigeonhole principle），任何哈希函数映射u个可能keys到m索引，必然映射多个keys到相同数组索引。如果两个项目关联着keys k1和k2，哈希到相同索引，例如$h(k_1)=h(k_2)$，我们称：k1和k2的哈希冲突了。如果不能提前知道什么keys被存储，那么这是不可能的：你选择的哈希函数完全避开冲突。如果更小的直接访问数组哈希表，仅能每个索引存储一个项目，当冲突发生时，我们将冲突项目存到哪？要么我们将冲突存储在相同直接访问数组的其他地方，要么把冲突存到其他地方（不在直接访问数组内）。第一个策略称为开放寻址法，这是绝大多数哈希表真正实现的，但这种策略很难分析。我们将采取第二个策略（拉链法）。
+
+## 拉链法（chaining）
+
+拉链法是一个冲突解决策略，冲突keys独立于原始哈希表存储。每个哈希表索引持有一个指向拉链的指针，单独的支持动态集合接口的数据结构，特殊操作：find(k)，insert(x)和delete(k)。使用链表或动态数组实现拉链是常见的，只要每次操作不超过线性时间就是可以的。插入项目x到哈希表，简单地在索引h(x.key)处的拉链上插入x；从哈希表中find或delete一个key k，简单地在索引h(k)处的拉链上查找、删除k。
+
+完美！我们想让拉链变得较小，因为如果我们的拉链仅持有常量个项目，那么动态集合操作将以常量时间运行。假设我们不幸地选了哈希函数，我们想存储的所有keys有相同的索引位置，在同一个拉链中。那么拉链将有线性尺寸，意味着动态集合操作会花费线性时间。好的哈希函数将尝试最小化这种冲突的频率，以便于最小化任意拉链尺寸。怎么算一个好的hash函数？
+
+## 哈希函数（hash functions）
+
+除法散列法（division method，bad）：最简单的映射：尺寸为u的整数域映射到更小的尺寸m，简单地让key除以m，取余数：$h(k)=(k\ mod\ m)$，或者在python中，k%m。如果你正在存的keys均匀地分布在域中，除法散列法将在哈希索引上，均匀地分发项目，因此我们期望拉链有小尺寸、高性能。然而，如果所有项目除以m后有同样的余数，那么这个哈希函数将是糟糕的。我们数据结构的性能，应独立于我们存储的keys。
+
+全域哈希（universal hash，good）：足够大的key域u，每个哈希函数对某组n个输入是不友好的。然而，通过随机地从大类哈希函数中选择我们的哈希函数，能够基于哈希表性能实现好的期望边界。期望是，我们选择的哈希函数，独立于输入。这不是对可能输入keys域的期望。一个性能良好的哈希函数族：
+
+$H(m,p)=\{h_{ab}(k)=(((ak+b)\ mod\ p)\ mod\ m)\ a,b\in\{0,...,p-1\}and\ a\neq0\}$
+
+p是大于key域u的素数。通过选择具体的a、b值，明确这个族中的某个hash函数。这个哈希函数族是全域（universal）的：对于任意两个keys，当使用来自全域族中随机选择的哈希函数时，它们哈希值冲突的可能性不会大于1/m。
+
+$\Pr\limits_{h\in H}\{h(k_i)=h(k_j)\}\le 1/m，\forall k_i \neq k_j\in\{0,...,u-1\}$
+
+如果我们知道一个哈希函数族是全域的，那么我们能得到任意拉链尺寸的期望上边界，期望源于我们从家族中选择的哈希函数。让$X_{ij}$表示随机变量，若$k_i和k_j$在选定的哈希函数上冲突，那么值为1，否则值为0。用随机变量代表哈希到索引$h(k_i)$的项目数量，将会是$X_i=\sum_jX_{ij}，k_j来自\{k_0,...,k_{n-1}\}$。哈希到位于$h(k_i)$处，拉链的keys期望数量为：
+
+$E{X_i}=E{\sum\limits_jX_{ij}}=\sum\limits_jE{X_{ij}}=1+\sum\limits_{j\neq i}E{X_{ij}}\\=1+\sum\limits_{j\neq i}(1)Pr\{h(k_i)=h(k_j)\}+(0)Pr\{h(k_i)+h(k_j)\}\\ \le1+\sum\limits_{j\neq i}1/m=1+(n-1)/m$
+
+如果哈希表的尺寸对于存储项目数量来说至少是线性的，$m=\Omega(n)$，任意拉链的期望尺寸将是$1+(n-1)/\Omega(n)=\mathcal{O}(n)$，一个常量。因此用一个从全域族中随机选择的哈希函数来实现哈希表，冲突部分用拉链解决，将以期望的常量时间执行动态集合操作，独立于输入keys。为了保持$m=\mathcal{O}(n)$，插入和删除操作需要你重建直接访问数组到一个不同尺寸，选择新哈希函数，并重新插入所有项目到哈希表。这可以用与动态数组相同的方式来完成，导致动态操作摊还边界。
+
+```python
+class Hash_Table_Set:
+    def __init__(self, r = 200):
+        self.chain_set = Set_from_Seq(Linked_List_Seq)
+        self.A = []
+        self.size = 0
+        self.r = r
+        self.p = 2**31 - 1
+        self.a = randint(1, self.p - 1)
+        self._compute_bounds()
+        self._resize(0)
+
+    def __len__(self):    return self.size
+    def __iter__(self):
+        for X in self.A:
+            yield from X
+    def build(self, X):
+        for x in X: self.insert(x)
+
+    def _hash(self, k, m):
+        return ((self.a * k) % self.p) % m
+
+    def _compute_bounds(self):
+        self.upper = len(self.A)
+        self.lower = len(self.A) * 100*100 // (self.r*self.r)
+
+    def _resize(self, n):
+        if (self.lower >= n) or (n >= self.upper):
+            f = self.r // 100
+            if self.r % 100:    f += 1
+            m = max(n, 1) * f
+            A = [self.chain_set() for _ in range(m)]
+            for x in self:
+                h = self._hash(x.key, m)
+                A[h].insert(x)
+            self.A = A
+            self._compute_bounds()
+
+    def find(self, k):
+        h = self._hash(k, len(self.A))
+        return self.A[h].find(k)
+
+    def insert(self, x):
+        self._resize(self.size + 1)
+        h = self._hash(x.key, len(self.A))
+        added = self.A[h].insert(x)
+        if added:    self.size += 1
+        return added
+
+    def delete(self, k):
+        assert len(self) > 0
+        h = self._hash(k, len(self.A))
+        x = self.A[h].delete(k)
+        self.size -= 1
+        self._resize(self.size)
+        return x
+
+    def find_min(self):
+        out = None
+        for x in self:
+            if (out is None) or (x.key < out.key):
+                out = x
+        return out
+
+    def find_max(self):
+        out = None
+        for x in self:
+            if (out is None) or (x.key > out.key):
+                out = x
+        return out
+
+    def find_next(self, k):
+        out = None
+        for x in self:
+            if x.key > k
+                if (out is None) or (x.key < out.key):
+                    out = x
+        return out
+
+    def find_prev(self, k):
+        out = None
+        for x in self:
+            if x.key < k
+                if (out is None) or (x.key > out.key):
+                    out = x
+        return out
+
+    def iter_order(self):
+        x = self.find_min()
+        while x:
+            yield x
+            x = self.find_next(x.key)
+```
+
+<div>
+<table>
+    <tr>    
+        <td rowspan=3>数据结构</td>
+        <td colspan=5 align="center">操作，最坏情形O</td>    
+    </tr>
+    <tr>
+        <td>容器（container）</td>
+        <td>静态（static）</td>
+        <td>动态（dynamic）</td>
+        <td colspan=2 align="center">顺序（order）</td>
+    </tr>
+    <tr>
+        <td>build(X)</td>
+        <td>find(k)</td>
+        <td>insert(x)<br>delete(k)</td>
+        <td>find_min()<br>find_max()</td>
+        <td>find_prev(k)<br>find_next(k)</td>
+    </tr>
+    <tr>
+        <td>数组</td>
+        <td>n</td>
+        <td>n</td>
+        <td>n</td>
+        <td>n</td>
+        <td>n</td>
+    </tr>
+    <tr>
+        <td>有序数组</td>
+        <td>nlogn</td>
+        <td>logn</td>
+        <td>n</td>
+        <td>1</td>
+        <td>logn</td>
+    </tr>
+    <tr>
+        <td>直接访问数组</td>
+        <td>u</td>
+        <td>1</td>
+        <td>1</td>
+        <td>u</td>
+        <td>u</td>
+    </tr>
+    <tr>
+        <td>哈希表</td>
+        <td>n</td>
+        <td>1</td>
+        <td>1</td>
+        <td>n</td>
+        <td>n</td>
+    </tr>
+</table>
+</div>
+
+## 练习
