@@ -591,7 +591,7 @@ class Binary_Node:
     def subtree_first(A):
         if A.left:    return A.left.subtree_first()
         else:         return A
-    
+
     def subtree_last(A):
         if A.right:   return A.right.subtree_last()
         else:         return A
@@ -651,4 +651,133 @@ class Binary_Tree:
         if T.root:
             for A in T.root.subtree_iter():
                 yield A.item
+```
+
+## 练习
+
+给定一个项目数组$A=(a_0,...,a_{n-1})$，描述一个$\mathcal{O}(n)$时间算法来构建一个二叉树T，包含在A中的项目，\(1\)存储在$i^{th}$（按T的遍历顺序）节点中的项目是$a_i$，(2)T的高度是$\mathcal{O}(\log n)$。
+
+解：通过存储中间项目到根节点来构建T，然后递归构建剩余的左、右两半部分到左右子树。由遍历顺序的定义可知，这个算法满足属性(1)，属性(2)：因为高度大致为$H(n)=1+H(n/2)$。这个算法执行时间$\mathcal{O}(n)$，因为每个节点每次递归执行常量工作。
+
+```python
+def build(X):
+    A = [x for x in X]
+    def build_subtree(A, i, j):
+        c = (i + j) // 2
+        root = self.Node_Type(A[c])
+        if i < c:
+            root.left = build_subtree(A, i, c - 1)
+            root.left.parent = root
+        if c < j:
+            root.right = build_subtree(A, c + 1, j)
+            root.right.parent = root
+        return root
+    self.root = build_subtree(A, 0, len(A)-1)
+```
+
+---
+
+证明以下迭代过程以遍历顺序返回树的节点，耗时$\mathcal{O}(n)$
+
+```python
+def tree_iter(T):
+    node = T.subtree_first()
+    while node:
+        yield node
+        node = node.successor()
+```
+
+解：这个过程遍历树的每个边两次，一次沿树向下，一次向上。因为树中边的数量比点的数量少1，遍历耗时$\mathcal{O}(n)$。
+
+## 应用：集合
+
+为了使用二叉树实现集合接口，我们使用树的遍历顺序来存储项目（按key升序排列）。这个属性通常被称作：二叉查找树属性，节点左子树中的key小于节点中的key，节点右子树中的key大于节点中的key。查找包含查询key的节点（或没有节点包含该key），可以通过沿着树向下完成，递归到恰当的边。
+
+解：通过一个个插入选中的学生项目，生成一个集合二叉树（二叉查找树），然后一个个查找、删除选中学生的key。
+
+```python
+class BST_Node(Binary_Node):
+    def subtree_find(A, k):
+        if k < A.item.key
+            if A.left:     return A.left.subtree_find(k)
+        elif k > A.item.key:
+            if A.right:    return A.right.subtree_find(k)
+        return None
+
+    def subtree_find_next(A, k):
+        if A.item.key <= k:
+            if A.right:    return A.right.subtree_find_next(k)
+            else:          return None
+        elif A.left:
+            B = A.left.subtree_find_next(k)
+            if B:          return B
+        return A
+
+    def subtree_find_prev(A, k):
+        if A.item.key >= k:
+            if A.left:    return A.left.subtree_find_prev(k)
+            else:         return None
+        elif A.right:
+            B = A.right.subtree_find_prev(k)
+            if B:         return B
+        return A
+
+    def subtree_insert(A, B):
+        if B.item.key < A.item.key:
+            if A.left:    A.left.subtree_insert(B)
+            else:         A.subtree_insert_before(B)
+        elif B.item.key > A.item.key:
+            if A.right:   A.right.subtree_insert(B)
+            else:         A.subtree_insert_after(B)
+        else:    A.item = B.item
+```
+
+```python
+class Set_Binary_Tree(Binary_Tree):
+    def __init__(self): super().__init__(BST_Node)
+
+    def iter_order(self): yield from self
+
+    def build(self, X):
+        for x in X: self.insert(x)
+
+    def find_min(self):
+        if self.root:    return self.root.subtree_first().item
+
+    def find_max(self):
+        if self.root:    return self.root.subtree_last().item
+
+    def find(self, k):
+        if self.root:
+            node = self.root.subtree_find(k)
+            if node:    return node.item
+
+    def find_next(self, k):
+        if self.root:
+            node = self.root.subtree_find_next(k)
+            if node:    return node.item
+
+    def find_prev(self, x):
+        if self.root:
+            node = self.root.subtree_find_prev(k)
+            if node:    return node.item
+
+    def insert(self, x):
+        new_node = self.Node_Type(x)
+        if self.root:
+            self.root.subtree_insert(new_node)
+            if new_node.parent is None: return False
+        else:
+            self.root = new_node
+        self.size += 1
+        return True
+
+    def delete(self, k):
+        assert self.root
+        node = self.root.subtree_find(k)
+        assert node
+        ext = node.subtree_delete()
+        if ext.parent is None: self.root = None
+        self.size -= 1
+        return ext.item
 ```
