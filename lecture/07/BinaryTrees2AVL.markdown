@@ -169,4 +169,45 @@ graph TB;
     
     * 在\<B\>上执行左旋
     
-    ![](http://cdn-qy.zjw.net/logo/lll/1dfcb74d2e5ecd07a0fb5bb45171983b.png@!f_200x200)
+    ![](https://raw.githubusercontent.com/lialong/algorithms-6006/main/lecture/07/1.png)
+    
+    * 让h=height(\<A\>)，那么height(\<G\>)=h+1，并且height(\<D\>)是h+1(case1)或h(case2)
+    * 旋转后：
+      * \<B\>的倾斜要么是1(case1)，要么是0(case2)，因此\<B\>是高度平衡的
+      * \<F\>的倾斜是-1，因此\<F\>是高度平衡的
+      * \<B\>的高度之前是h+3，之后为h+3(case1)、h+2(case2)
+  
+  * case3：\<F\>的倾斜是-1，因此\<F\>的左子节点\<D\>存在
+    
+    * 在\<F\>上执行右旋，在\<B\>上执行左旋
+    
+    ![](https://raw.githubusercontent.com/lialong/algorithms-6006/main/lecture/07/2.png)
+    
+    * 让h=height(\<A\>)。那么height(\<G\>)=h，height(\<C\>)和height(\<E\>)是h或h-1
+    * 旋转后：
+      * \<B\>的倾斜是0或-1，因此\<B\>的高度是平衡的
+      * \<F\>的倾斜是0或1，因此\<F\>的高度是平衡的
+      * \<D\>的倾斜是0，因此D是高度平衡的
+      * \<B\>的高度之前是h+3，那么之后是h+2
+
+* 全局再平衡：从高度平衡树T中添加或删除一个叶子生成树T'。然后T‘可以使用至多$\mathcal{O}(\log n)$次旋转转换成一个高度平衡树T''
+
+* 证明：
+  
+  * 仅受影响叶子的祖先，T'比T有不同的高度
+  
+  * 受影响叶子至多$h=\mathcal{O}(\log n)$个祖先（它的子树可能已经改变）
+  
+  * 让\<X\>为最低的高度不平衡祖先（倾斜度是2）
+  
+  * 如果一个叶子加到T：
+    
+    * 插入增加\<X\>的高度，因此是不平衡的case2或case3
+    
+    * 旋转降低子树的高度：旋转后平衡
+  
+  * 如果叶子从T中移除：
+    
+    * 删除使\<X\>子节点的高度降低1，并非\<X\>，因此仅不平衡
+    
+    * 可能让\<X\>的高度降低1；
