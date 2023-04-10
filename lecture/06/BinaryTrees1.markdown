@@ -138,12 +138,12 @@ graph TB;
 <table>
     <tr>    
         <td>node</td>
-        <td><A></td>
-        <td><B></td>
-        <td><C></td>
-        <td><D></td>    
-        <td><E></td>
-        <td><F></td>
+        <td>&ltA&gt</td>
+        <td>&ltB&gt</td>
+        <td>&ltC&gt</td>
+        <td>&ltD&gt</td>    
+        <td>&ltE&gt</td>
+        <td>&ltF&gt</td>
     </tr>
     <tr>    
         <td>item</td>
@@ -157,25 +157,25 @@ graph TB;
     <tr>    
         <td>parent</td>
         <td>--</td>
-        <td><A></td>
-        <td><A></td>
-        <td><B></td>
-        <td><B></td>    
-        <td><D></td>
+        <td>&ltA&gt</td>
+        <td>&ltA&gt</td>
+        <td>&ltB&gt</td>
+        <td>&ltB&gt</td>    
+        <td>&ltD&gt</td>
     </tr>
     <tr>    
         <td>left</td>
-        <td><B></td>
-        <td><D></td>
+        <td>&ltB&gt</td>
+        <td>&ltD&gt</td>
         <td>-</td>
-        <td><F></td>
+        <td>&ltF&gt</td>
         <td>-</td>    
         <td>-</td>
     </tr>
     <tr>    
         <td>right</td>
-        <td><C></td>
-        <td><E></td>
+        <td>&ltC&gt</td>
+        <td>&ltE&gt</td>
         <td>-</td>
         <td>-</td>
         <td>-</td>    
