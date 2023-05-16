@@ -232,9 +232,9 @@ graph TB;
 
 * 点子：在每个节点处增加其子树的高度
 
-* 在动态操作期间，我们必须随着树改变形状维持扩张
+* 在动态操作期间，我们必须随着树改变形状维持扩展
 
-* 在每个节点的子树改变时，重新计算子树的扩张
+* 在每个节点的子树改变时，重新计算子树的扩展
   
   * 对在旋转操作中重新链接的点进行更新，花费$\mathcal{O}(1)$，祖先不改变
   
@@ -297,4 +297,299 @@ $F(h)>=2^{h/2}=2^{\Omega(n)}$
 ## 旋转
 
 当我们对树添加或删除节点时，可能：我们的树将变得不平衡。我们想要改变树的结构，而不改变它的遍历顺序，希望我们能让树的结构更平衡。我们能用局部操作——旋转，改变树的结构。子树发生的旋转，看起来就像下面的两个配置，花费$\mathcal{O}(1)$更改节点之间的连接，从一个配置转换为另外一个配置。
-![](https://raw.githubusercontent.com/lialong/algorithms-6006/main/lecture/07/3.png)
+
+![](http://raw.githubusercontent.com/lialong/algorithms-6006/main/lecture/07/3.png)
+
+这个操作保留了树的遍历顺序，但却改变了子树\<A\>、\<E\>中所有节点的深度。接下来，我们将使用旋转来保证：插入或删除一个节点后，平衡树仍然维持平衡。
+
+```python
+def subtree_rotate_right(D):
+    assert D.left
+    B, E = D.left, D.right
+    A, C = B.left, B.right
+    D, B = B, D
+    D.item, B.item = B.item, D.item
+        B.left, B.right = A, D
+    D.left, D.right = C, E
+    if A: A.parent = B
+    if E: E.parent = D
+    # B.subtree_update()
+    # D.subtree_update()
+
+def subtree_rotate_left(B):
+    assert B.right
+    A, D = B.left, B.right
+    C, E = D.left, D.right
+    B, D = D, B
+    B.item, D.item = D.item, B.item
+    D.left, D.right = B, E
+    B.left, B.right = A, C
+    if A: A.parent = B
+    if E: E.parent = D
+    # B.subtree_update()
+    # D.subtree_update()
+```
+
+## 维持高度平衡
+
+假设我们有一个高度平衡的AVL树，我们通过添加或删除叶子，执行单个插入或删除操作。要么结果树仍然是高度平衡的，要么叶子上的改变，至少让树上的1个节点的倾斜大于1。特别地，这些节点（位于叶子更改后子树发生改变的树中）是叶子的祖先（至多$\mathcal{O}(h)$），因此它们是仅有的，斜率发生改变（从至多1到至多2）。正如lecture中展示的那样，通过一个简要的case分析，给定一个子树，它的根斜率为2，子树中其他节点是高度平衡的，我们可以通过至多两次旋转恢复子树平衡。因此为了再平衡整个树，沿着叶子向根走，能够再平衡路径上的每个节点，总共至多执行$\mathcal{O}(\log n)$次旋转。详细的证明列在lecture笔记中，此处不再重复。如果学生想看完整的扩展，那么证明也可以在recitation中回顾一下。下面是实现lecture中再平衡算法的代码。
+
+```python
+def skew(A):
+    return height(A.right) - height(A.left)
+
+def rebalance(A):
+    if A.skew() == 2:
+        if A.right.skew() < 0:
+            A.right.subtree_rotate_right()
+            A.subtree_rotate_left()
+    elif A.skew() == -2:
+        if A.left.skew() > 0:
+            A.left.subtree_rotate_left()
+        A.subtree_rotate_right()
+
+def maintain(A):
+    A.rebalance()
+    A.subtree_update()
+    if A.parent: A.parent.maintain()
+```
+
+不幸地是，无法有效地评估节点斜率，来决定是否需要执行旋转，因为计算一个节点的高度，天然地花费子树尺寸的线性时间。下面的代码递归地计算子树\<A\>中每个节点的高度，因此至少花费$\mathcal{O}(n)$。
+
+```python
+def height(A):
+    if A is None: return -1
+    return 1 + max(height(A.left), height(A.right))
+```
+
+最坏情形下，再平衡需要我们检查至少$\Omega(\log n)$高度，因此如果我们想再平衡树，至多花费$\mathcal{O}(\log n)$，我们需要能够花费$\mathcal{O}(1)$评估节点的高度。不是我们每次需要它的时候计算节点高度，我们将通过扩展加速计算：特别地，每个点存储、维护了它自己子树的高度。那么我们处于该点时，评估它的高度就像读取它存储的值一样简单，花费$\mathcal{O}(1)$。然而，当树的结构发生改变时，我们将需要更新、并重算节点（高度发生改变）的高度。
+
+```python
+def height(A):
+    if A:    return A.height
+    else:    return -1
+
+def subtree_update(A):
+    A.height = 1 + max(height(A.left), height(A.right))
+```
+
+R06中的动态操作，我们让注释的代码，在每个节点更新时（它的子树在插入、删除、旋转时）发生调用。一个再平衡插入或删除操作，仅在至多$\mathcal{O}(\log n)$节点处调用subtree_update，基于节点子孙存储的扩展，更新一个节点花费至多$\mathcal{O}(1)$来重算扩展，那么扩展可以花费$\mathcal{O}(\log n)$在再平衡时被维持。
+
+总的来说，扩展背后的想法是：在每个节点处存储额外的信息，以便于信息可以在未来被快速查询。你已经在PS1中做了一些扩展，你用一个向后的指针扩展单链表，使其更快地评估节点的前驱。为了用子树属性P(\<X\>)来扩展二叉树的节点，你需要：
+
+* 清晰地定义\<X\>子树的什么属性对应P(\<X\>)
+
+* 展示如何从\<X\>子孙的扩展中，花费$\mathcal{O}(1)$计算P(\<X\>)
+
+如果你可以做到，那么你将能存储并维持每个节点处的属性，不会影响再平衡插入/删除的运行时间$\mathcal{O}(\log n)$。我们已经展示了如何遍历二叉树，并执行插入、删除，每个花费$\mathcal{O}(h)$，维持了高度平衡，因此$h=\mathcal{O}(\log n)$。现在我们最终准备好了实现一个有效地序列和集合。
+
+## AVL平衡二叉树实现
+
+```python
+def height(A):
+    if A:    return A.height
+    else:    return -1
+
+class Binary_Node:
+    def __init__(A, x):
+        A.item = x
+        A.left = None
+        A.right = None
+        A.parent = None
+        A.subtree_update()
+
+    def subtree_update(A):
+        A.height = 1 + max(height(A.left),height(A.right))
+
+    def skew(A):
+        return height(A.right) - height(A.left)
+
+    def subtree_iter(A):
+        if A.left:    yield from A.left.subtree_iter()
+        yield A
+        if A.right:    yield from A.right.subtree_iter()
+
+    def subtree_first(A):
+        if A.left:    return A.left.subtree_first()
+        else:         return A
+
+    def subtree_last(A):
+        if A.right:    return A.right.subtree_last()
+        else:         return A
+
+    def successor(A):
+        if A.right:    return A.right.subtree_first()
+        while A.parent and (A is A.parent.right)
+            A = A.parent
+        return A.parent
+
+    def predecessor(A):
+        if A.left:    return A.left.subtree_last()
+        while A.parent and (A is A.parent.left):
+            A = A.parent
+
+    def subtree_insert_before(A, B):
+        if A.left:
+            A = A.left.subtree_last()
+            A.right, B.parent = B, A
+        else:
+            A.left, B.parent = B, A
+        A.maintain()
+
+    def subtree_insert_after(A, B):
+        if A.right:
+            A = A.right.subtree_first()
+        else:
+            A.right, B.parent = B, A
+        A.maintain()
+
+    def subtree_delete(A):
+        if A.left or A.right:
+            if A.left:    B = A.predecessor()
+            else:         B = A.successor()
+            A.item, B.item = B.item, A.item
+            return B.subtree_delete()
+        if A.parent:
+            if A.parent.left is A:    A.parent.left = None
+            else:                     A.parent.right = None
+            A.parent.maintain()
+        return A
+
+    def subtree_rotate_right(D):
+        assert D.left
+        B, E = D.left, D.right
+        A, C = B.left, B.right
+        D, B = B, D
+        D.item, B.item = B.item, D.item
+        B.left, B.right = A, D
+        D.left, D.right = C, E
+        if A: A.parent = B
+        if E: E.parent = D
+        B.subtree_update()
+        D.subtree_update()
+
+    def subtree_rotate_left(B):
+        assert B.right
+        A, D = B.left, B.right
+        C, E = D.left, D.right
+        B, D = D, B
+        B.item, D.item = D.item, B.item
+        D.left, D.right = B, E
+        B.left, B.right = A, C
+        if A: A.parent = B
+        if E: E.parent = D
+        B.subtree_update()
+        D.subtree_update()
+
+    def rebalance()
+        if A.skew() == 2:
+            if A.right.skew() < 0:                
+                A.right.subtree_rotate_right()
+            A.subtree_rotate_left()
+        elif A.skew() == -2:
+            if A.left.skew() > 0:
+                A.left.subtree_rotate_left()
+            A.subtree_rotate_right()
+
+    def maintain(A):
+        A.rebalance()
+        A.subtree_update()
+        if A.parent: A.parent.maintain()
+```
+
+## 应用：集合
+
+使用我们新的Binary_Node（维持了平衡）定义，R06中Binary_Tree_Set的实现立刻支持所有这些操作花费$h=\mathcal{O}(\log n)$，除了build(X)和iter()，分别花费$\mathcal{O}(n\log n)$、$\mathcal{O}(n)$。这个数据结构正是常说的AVL树，但我们将称之为Set AVL。
+
+## 应用：序列
+
+为了用二叉树实现一个序列接口，我们使用树的遍历顺序，以序列顺序存储项目。现在我们需要一个快速的方式来找到序列中的第i个项目，因为遍历花费$\mathcal{O}(n)$。如果我们知道多少个项目存储在我们的左子树中，我们可以将正在查找的index和该size做比较，在恰当的边上递归。为了有效地计算子树size，我们将树中每个节点的子树size作为一个扩展。节点的size可以被以常量时间计算，将子孙size相加，再加1。
+
+```python
+class Size_Node(Binary_Node):
+    def subtree_update(A):
+        super().subtree_update()
+        A.size = 1
+        if A.left:    A.size += A.left.size
+        if A.right:    A.size += A.right.size
+
+    def subtree_at(A, i):
+        assert 0 <= i
+        if A.left:         L_size = A.left.size
+        else:              L_size = 0
+        if i < L_size:     return A.left.subtree_at(i)
+        elif i > L_size:   return A.right.subtree_at(i - L_size - 1)
+        else:              return A
+```
+
+一旦我们能够花费$\mathcal{O}(\log n)$找到平衡二叉树中第i个节点，序列接口中的剩余操作可以使用二叉树操作直接实现。通过R06中的第一个练习，我们可以从输入序列花费$\mathcal{O}(n)$构建这样一个树。我们称这个数据结构为Sequence AVL。
+
+序列和集合接口的实现都可以在以下页面找到。我们已经做了一个CoffeeScript Balanced Binary Tree虚拟化：[Binary Search Trees](https://codepen.io/mit6006/pen/NOWddZ)
+
+```python
+class Seq_Binary_Tree(Binary_Tree):
+    def __init__(self):    super().__init__(Size_Node)
+
+    def build(self, X):
+        def build_subtree(X, i, j):
+            c = (i + j) // 2
+            root = self.Node_Type(X[c])
+            if i < c:
+                root.left = build_subtree(X, i, c - 1)
+                root.left.parent = root
+            if c < j:
+                root.right = build_subtree(X, c + 1, j)
+                root.right.parent = root
+            root.subtree_update()
+            return root
+        self.root = build_subtree(X, 0, len(X) - 1)
+        self.size = self.root.size
+
+    def get_at(self, i):
+        assert self.root
+        return self.root.subtree_at(i).item
+
+    def set_at(self, i, x):
+        assert self.root
+        self.root.subtree_at(i).item = x
+
+    def insert_at(self, i, x):
+        new_node = self.Node_Type(x)
+        if x == 0:
+            if self.root:
+                node = self.root.subtree_first()
+                node.subtree_insert_before(new_node)
+            else:
+                self.root = new_node
+        else:
+            node = self.root.subtree_at(i - 1)
+            node.subtree_insert_after(new_node)
+        self.size += 1
+
+    def delete_at(self, i):
+        assert self.root
+        node = self.root.subtree_at(i)
+        ext = node.subtree_delete()
+        if ext.parent is None: self.root = None
+        self.size -= 1
+        return ext.item
+
+    def insert_first(self, x): self.insert(0, x)
+    def delete_first(self): self.delete_at(0)
+    def insert_last(self, x): self.insert_at(len(self), x)
+    def delete_last(self): self.delete_at(len(self)-1)        
+```
+
+## 练习1
+
+通过一个一个地插入选中的学生，生成一个序列或集合AVL树（平衡二叉搜索树）。如果任意节点高度不平衡，再平衡它的祖先。这里是一个序列AVL树样例，可能是有指导性的（记得随着更改树，更新子树高度和尺寸）。
+
+```python
+T = Seq_Binary_Tree()
+T.build([10,6,8,5,1,3])
+T.get_at(4)
+T.set_at(4, -4)
+T.insert_at(4, 18)
+T.insert_at(4, 12)
+T.delete_at(2)
+```
