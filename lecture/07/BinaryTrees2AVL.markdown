@@ -582,7 +582,7 @@ class Seq_Binary_Tree(Binary_Tree):
 
 ## 练习1
 
-通过一个一个地插入选中的学生，生成一个序列或集合AVL树（平衡二叉搜索树）。如果任意节点高度不平衡，再平衡它的祖先。这里是一个序列AVL树样例，可能是有指导性的（记得随着更改树，更新子树高度和尺寸）。
+通过一个一个地插入选中的学生，生成一个序列或集合AVL树（平衡二叉搜索树）。如果任意节点高度不平衡，再平衡它的所有祖先。这里是一个序列AVL树样例，可能是有指导性的（记得随着更改树，更新子树高度和尺寸）。
 
 ```python
 T = Seq_Binary_Tree()
@@ -592,4 +592,45 @@ T.set_at(4, -4)
 T.insert_at(4, 18)
 T.insert_at(4, 12)
 T.delete_at(2)
+```
+
+![](https://raw.githubusercontent.com/lialong/algorithms-6006/main/lecture/07/4.png)
+
+## 练习2
+
+维持一个n位的序列，支持两个操作，每个都是$\mathcal{O}(\log n)$时间复杂度。
+
+* flip(i)：flip索引i处的位
+
+* count_ones_upto(i)：到索引i处，值为1的个数。
+
+解法：维持一个序列树，存储bit作为项目，每个节点A处新增：A.subtree_ones，表明子树中1的数量。我们可以花费$\mathcal{O}(1)$从它子节点存储的该值，来维持这个变量。
+
+```python
+def update(A):
+    A.subtree_ones = A.item
+    if A.left:
+        A.subtree_ones += A.left.subtree_ones
+    if A.right:
+        A.subtree_ones += A.right.subtree_ones
+```
+
+为了实现flip(i)，使用subtree_node_at(i)找到第i个节点A，flip存储在A.item中的bit。然后更新A以及A的每个祖先（通过沿着树向上）的变量subtree_ones，花费$\mathcal{O}(\log n)$。
+
+为了实现count_ones_upto(i)，我们将首先定义基于子树的递归函数：subtree_count_ones_upto(A, i)，它返回节点A子树中1的数量（A子树内至多索引i）。然后count_ones_upto(i)对应等价为subtree_count_ones_to(T.root, i)。因为每个递归调用，至多在子节点上生成1次递归调用，操作花费$\mathcal{O}(\log n)$。
+
+```python
+def subtree_count_ones_upto(A, i):
+    assert 0 <= i < A.size
+    out = 0
+    if A.left:
+        if i < A.left.size:
+            return subtree_count_ones_upto(A.left, i)
+        out += A.left.subtree_ones
+        i -= A.left.size
+    out += A.item
+    if i > 0:
+        assert A.right
+        out += subtree_count_ones_upto(A.right, i - 1)
+    return out
 ```
