@@ -187,3 +187,59 @@
 ![](https://raw.githubusercontent.com/lialong/algorithms-6006/main/lecture/09/4.png)
 
 使用数组作为邻接表是一种完美的数据结构，如果你需要做的是在顶点相邻的边上循环（本课程中所有这种场景的算法，会默认是这么实现的）。每个边在邻接表中至多出现2次，因此使用数组实现邻接表的尺寸是$\Theta(|V|+|E|)$。这种表示方式的缺点是，判断图中是否包含给定边$(u,v)$，可能需要$\Omega(|V|)$时间来遍历u或v的邻接表数组。我们可以通过用哈希表来存储（而不是无序数组）邻接表，克服这个障碍，支持边检测耗费预期的$O(1)$，仍然仅使用$\Theta(|V|+|E|)$空间。然而我们的算法不需要这个操作，因此我们将假定：更简单的无序数组相邻表表示。下面是使用哈希表用作外部${Adj}$集合和内部邻接表$Adj(u)$的$G_1$和$G_2$的表示，使用python dictionary。
+
+![](https://raw.githubusercontent.com/lialong/algorithms-6006/main/lecture/09/5.png)
+
+## 广度优先查找
+
+给定一个图，常见的查询是：从查到的顶点s，找到通过路径可达的顶点。广度优先查找（BFS）从s开始探索s的层级集合：层级$L_i$是从s通过长度为i的最短路径可达的顶点集合（不可通过更短长度路径达到）。
+
+广度优先查找以升序探索层级，从i=0开始，$L_0=\{s\}$，因为从s通过路径长度$i=0$可达的仅有顶点是它本身。任何从s经过长度为$i+1$的最短路径可达的顶点，一定有来自顶点（从s经过长度为i的最短路径可达的顶点，包含在$L_i$）的入边。计算层级$L_{i+1}$，每个顶点有来自层级$L_i$顶点的入边，且尚未被分配到层级。通过从之前层级计算下一层级，根据源于s的最短路径长度，增长的点边境会被探索。
+
+![](https://raw.githubusercontent.com/lialong/algorithms-6006/main/lecture/09/6.png)
+
+下面Python代码实现了广度优先查找，通过索引标注邻接表表示图，为每个顶点返回父级标签（按返回s最短路径的方向）。所有父级标签一块构成了从顶点s的BFS树，包含从s到图中每个其他顶点的最短路径。
+
+```python
+def bfs(Adj, s):
+    parent = [None for v in Adj]
+    parent[s] = s
+    level = [s]
+    while 0 < len(level[-1]):
+        level.append([])
+        for u in level[-2]:
+            for v in Adj[u]:
+                if parent[v] is None:
+                    parent[v] = u
+                    level[-1].append[v]
+    return parent
+```
+
+广度优先查找有多块？9-11行的内循环会执行多少次？在11行，点被加到任意层级至多一次，因此第7行的循环至多处理每个顶点一次。第8行的循环遍历从顶点v开始的$deg(v)$外向边。因此内循环至多重复$O(\sum_{v\in V}deg(v))=O(|E|)$次。因为返回的parent数组长度为$|V|$，所以广度优先查找运行时间为$O(|E|+|V|)$。
+
+## 练习1
+
+对于图$G_1$和$G_2$，从顶点$v_0$执行广度优先查找，生成parent labels和层级集合。
+
+![](https://raw.githubusercontent.com/lialong/algorithms-6006/main/lecture/09/7.png)
+
+我们可以使用parent labels（广度优先查找返回）来构建从顶点s到顶点t的最短路径，跟随parent指针，通过图从t到s。下面python代码，可以计算从s到t的最短路径，最坏运行时间$O(|V|+|E|)$。
+
+```python
+def unweighted_shortest_path(Adj, s, t):
+    parent = bfs(Adj, s)
+    if parent[t] is None:
+        return None
+    i = t
+    path = [t]
+    while i != s:
+        i = parent[i]
+        path.append(i)
+    return path[::-1]
+```
+
+## 练习2
+
+给定无权重图$G=(V,E)$，找出从s到t有奇数边的一条最短路径。
+
+构建新图$G'=(V',E')$。对于V中每个顶点u，构建2个顶点$u_E$和$u_O$到$V'$：分别表示通过偶数和奇数边可达的顶点。对于E中每个边$(u,v)$，构建边$(u_E,u_O)$和边$(u_O,u_E)$到$E'$。$G'$上从$s_E$运行广度优先查找，找出从$s_E$到$t_O$的最短路径。因为$G'$是偶数点和奇数点之间的二分图，从$s_E$出发的偶数长度路径将总是以偶数顶点结尾，奇数长度路径将以奇数顶点结尾，因此找从$s_E$到$t_O$的最短路径，将代表原始图中的奇数长度路径。因为$G'$有$2|V|$顶点和$2|E|$边，构建$G'$，从$s_E$运行广度优先查找耗费$O(|V|+|E|)$。
