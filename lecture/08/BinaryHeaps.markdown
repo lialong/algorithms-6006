@@ -215,3 +215,94 @@
   * 集合中的每个项目是一个序列（比如链表），存储了有同一个key的多个项目
 
 * 实际上，除了这个方法，二叉堆和AVL树可以直接处理重复key的项目（比如delete_max删除有最大key的所有项目），注意使用<=，而不是集合AVL树中的<
+
+# 十六、Recitation
+
+## 优先队列
+
+优先队列为至少3种排序算法提供了通用框架，不同数据结构实现方式不同。
+
+<div>    
+<table>
+    <tr>    
+        <td>算法</td>
+        <td>数据结构</td>
+        <td>插入</td>
+        <td>抽取</td>
+        <td>总计</td>
+    </tr>
+    <tr>
+        <td>选择排序</td>
+        <td>数组</td>
+        <td>O(1)</td>
+        <td>O(n)</td>
+        <td>O(n^2)</td>
+    </tr>
+    <tr>
+        <td>插入排序</td>
+        <td>有序数组</td>
+        <td>O(n)</td>
+        <td>O(1)</td>
+        <td>O(n^2)</td>
+    </tr>
+    <tr>
+        <td>堆排序</td>
+        <td>二叉堆</td>
+        <td>O(logn)</td>
+        <td>O(logn)</td>
+        <td>O(nlogn)</td>
+    </tr>
+</table>
+</div>
+
+python代码实现这些优先队列。抽象基类有优先队列的接口，维护一个内部数组A，实现insert(x)和delete_max()（后者本身不正确，但对子类有用）。
+
+```python
+class PriorityQueue:
+    def __init__(self):
+        self.A = []
+
+    def insert(self, x):
+        self.A.append(x)
+
+    def delete_max(self):
+        if len(self.A) < 1:
+            raise IndexError('pop from empty priority queue')
+        return self.A.pop()
+
+    @classmethod
+    def sort(Queue, A):
+        pq = Queue()
+        for x in A:
+            pa.insert(x)
+        out = [pq.delete_max() for _ in A]
+        out.reverse()
+        return out
+```
+
+共享的、跨实现的，是排序方法，给定insert和delete_max的实现。排序简化为数组上的2个循环：一个插入所有元素，另一个以反向顺序弹出数组连续最大值。
+
+## 数组堆
+
+我们在之前recitation中展示选择排序和归并排序。现在是优先队列视角的实现。如果你展开本代码的组织，你将得到与之前呈现相同的代码。
+
+```python
+class PQ_Array(PriorityQueue):
+    # PriorityQueue.insert already correcet: appends to end of self.A
+    def delete_max(self):
+        n, A, m = len(self.A), self.A, 0
+        for i in range(1, n):
+            if A[m].key < A[i].key
+                m = i
+        A[m], A[n] = A[n], A[m]
+        return super().delete_max()
+```
+
+```python
+class PQ_SortedArray(PriorityQueue):
+    # PriorityQueue.delete_max already correct: pop from end of self.A
+    def insert(self, *args):
+        super().insert(*args)
+        i, A = len(self.A) - 1, self.A
+        while 0 < i  and A[i+1].key < A[i].key
+```
