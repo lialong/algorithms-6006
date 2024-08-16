@@ -274,7 +274,7 @@ class PriorityQueue:
     def sort(Queue, A):
         pq = Queue()
         for x in A:
-            pa.insert(x)
+            pq.insert(x)
         out = [pq.delete_max() for _ in A]
         out.reverse()
         return out
@@ -288,13 +288,13 @@ class PriorityQueue:
 
 ```python
 class PQ_Array(PriorityQueue):
-    # PriorityQueue.insert already correcet: appends to end of self.A
+    # PriorityQueue.insert already correct: appends to end of self.A
     def delete_max(self):
         n, A, m = len(self.A), self.A, 0
         for i in range(1, n):
-            if A[m].key < A[i].key
+            if A[m].key < A[i].key:
                 m = i
-        A[m], A[n] = A[n], A[m]
+        A[m], A[n-1] = A[n-1], A[m]
         return super().delete_max()
 ```
 
@@ -304,5 +304,108 @@ class PQ_SortedArray(PriorityQueue):
     def insert(self, *args):
         super().insert(*args)
         i, A = len(self.A) - 1, self.A
-        while 0 < i  and A[i+1].key < A[i].key
+        while 0 < i and A[i].key < A[i-1].key:
+            A[i], A[i-1] = A[i-1], A[i]
+            i -= 1
 ```
+
+我们使用*args允许insert接收1个参数或0个参数；in-place生成优先队列时，我们将需要后者功能。
+
+## 二叉堆
+
+下个实现基于二叉堆，利用完全二叉树（对数高度）来提升性能。这些函数所做的大部分工作都由下面的max_heapify_up和max_heapiify_down封装。
+
+```python
+class PQ_Heap(PriorityQueue):
+    def insert(self, *args):
+        super().insert(*args)
+        n, A = self.n, self.A
+        max_heapify_up(A, n, n-1)
+
+    def delete_max(self):
+        n, A = self.n, self.A
+        A[0], A[n] = A[n], A[0]
+        max_heapify_down(A, n, 0)
+        return super().delete_max()
+```
+
+之前我们定义了max_heapify操作，我们需要函数来计算parent和child索引（给定索引代表树中节点，它的根是数组中首个元素）。在这个实现中，如果计算的索引超出数组边界，返回输入索引。总是返回有效数组索引，而不是抛出错误，可以帮助简化未来代码。
+
+```python
+def parent(i):
+    p = (i - 1) // 2
+    return p if 0 < i else i
+
+def left(i, n):
+    l = 2 * i + 1
+    return l if l < n else i
+
+def right(i, n):
+    r = 2 * i + 2
+    return r if r < n else i
+```
+
+这是最大堆所作工作的核心。假设除了节点A[i]，A[:n]所有节点满足最大堆属性，使这些函数易于维护最大堆属性。
+
+```python
+def max_heapify_up(A, n, c):
+    p = parent(c)
+    if A[p].key < A[c].key:
+        A[c], A[p] = A[p], A[c]
+        max_heapify_up(A, n, p)
+
+def max_heapify_down(A, n, p):
+    l, r = left(p, n), right(p, n)
+    c = l if A[r].key < A[l].key else r
+    if A[p].key < A[c].key:
+        A[c], A[p] = A[p], A[c]
+        max_heapify_down(A, n, c)
+```
+
+## $O(n)$构建堆
+
+使用最大堆优先队列重复插入，花费$\sum_{i=0}^nlogi=logn!=O(nlogn)$。我们可以用线性时间构建最大堆，如果整个数组可访问。方法是：按反向层级顺序构建堆，从叶子到根，所有处理过的节点维持最大堆属性（通过每个节点运行max_heapify_down）。作为优化，我们注意到数组后半部分都是叶子，因此我们无需对它们执行max_heapify_down。
+
+```python
+def build_max_heap(A):
+    n = len(A)
+    for i in range(n // 2, -1, -1):
+        max_heapify_down(A, n, i)
+```
+
+可见这个过程花费$O(n)$而不是$O(nlogn)$，我们显式地使用累加计算上边界。推导中，我们使用斯特林公式（Stirling’s approximation）：$n!=\Theta(\sqrt{n}(n/e)^n)$。
+
+$T(n)<\sum_{i=0}^n(logn-logi)=log(\frac{n^n}{n!})=O(log(\frac{n^n}{\sqrt{n}(n/e)^n}))=O(log(e^n/\sqrt{n}))=O(nloge-log\sqrt{n})=O(n)$
+
+使用这个线性方法构建最大堆，不会影响堆排序性能，因为delete_max删除n中每个元素花费$O(logn)$。但对初始化写入n个项目到空堆来说，这确实是更有效的方法。
+
+## In-Place堆
+
+为了堆排序是in-place（也是为了恢复选择排序、插入排序的in-place属性），我们可以更改基类PriorityQueue，取整个数组A，维护队列在A的前n个元素中（$n<=len(A)$）。insert函数不再接收值用于插入；而是插入已经存储在A[n]的元素，将其合并成为更大队列。相似地，delete_max不会返回值，它仅仅是在缩小它尺寸前，放置它的输出到A[n]。这个方式，仅对这种情形起作用：在n个delete_max之前进行n个insert操作，正如优先队列排序。
+
+```python
+class PriorityQueue:
+    def __init__(self, A):
+        self.n, self.A = 0, A
+
+    def insert(self):
+        if not self.n < len(self.A):
+            raise IndexError('insert into full priority queue')
+        self.n += 1
+
+    def delete_max(self):
+        if self.n < 1:
+            raise IndexError('pop from empty priority queue')
+        self.n -= 1
+
+    @classmethod
+    def sort(Queue, A):
+        pq = Queue(A)
+        for i in range(len(A)):
+            pq.insert()
+        for i in range(len(A)):
+            pq.delete_max()
+        return pq.A
+```
+
+这个新基类用于任意子类（PQ_Array,PQ_SortedArray,PQ_Heap）的排序。前2个排序算法更接近原始的选择排序和插入排序，最后的算法通常指的是堆排序。

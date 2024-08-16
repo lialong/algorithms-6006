@@ -1,5 +1,5 @@
 from common import ListUtil
-
+from common.Item import Item
 
 class PriorityQueue:
     def __init__(self):
@@ -22,7 +22,6 @@ class PriorityQueue:
         out.reverse()
         return out
 
-
 class PQ_Array(PriorityQueue):
     # PriorityQueue.insert already correct: appends to end of self.A
     def delete_max(self):
@@ -43,22 +42,15 @@ class PQ_SortedArray(PriorityQueue):
             A[i], A[i-1] = A[i-1], A[i]
             i -= 1
 
-
-class Item:
-    def __init__(self, key, val):
-        self.key = key
-        self.val = val
-
-
 if __name__ == '__main__':
-    list1 = [Item(2, "2"), Item(1, "1")]
+    list1 = [Item(2, "2"), Item(1, "1"), Item(3, "3")]
+
+    print("origin sort")
+    ListUtil.print_list(list1)
 
     print("pq_array")
     pqArray = PQ_Array()
     ListUtil.print_list(pqArray.sort(list1))
-
-    print("origin sort")
-    ListUtil.print_list(list1)
 
     print("pq_sorted_array")
     pqSortedArray = PQ_SortedArray()
