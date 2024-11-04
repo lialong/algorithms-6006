@@ -110,3 +110,5 @@ $initialize(M)$：在最坏情况下，从M中的矩阵构建T，时间复杂度
 $update_joint(k, M)$：使用在T的根节点处的$get_at(k)$在$O(log n)$时间内找到遍历顺序中包含矩阵k的节点v，并用M替换v.M。然后，在$O(log n)$时间内重新计算树上的增强。
 
 $full transformation()$：存储在T的根节点处的增强正好对应于手臂的完全变换，因此只需在$O(1)$时间内返回T.root.P。
+
+# 4-6 $\pi z^2a$ Optimization
